@@ -23,7 +23,10 @@
 <body>
 <div id="landing">
   <img class="logo" src="assets/noho-logo.svg" alt="Logo" onerror="this.style.display='none'">
-  <button id="enter-vr-btn">Vstoupit do VR</button>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+    <button id="enter-vr-btn" style="padding:18px 42px">Vstoupit do VR</button>
+    <button id="enter-vr-debug-btn" style="padding:18px 42px;background:linear-gradient(135deg,#e67e22,#f39c12)">Vstoupit do VR (Debug)</button>
+  </div>
   <p class="hint">Nasaďte Meta Quest 3 a klikněte na tlačítko</p>
 </div>
 <div id="loading-overlay"><div class="spinner"></div><span>Načítání…</span></div>
@@ -51,7 +54,7 @@
     "position": {
       "x": 0.445,
       "y": 5.935,
-      "z": 29.404
+      "z": -29.404
     },
     "distance": 680,
     "recordingFile": "500m.wav",
@@ -65,7 +68,7 @@
     "position": {
       "x": -14.971,
       "y": 5.054,
-      "z": 25.502
+      "z": -25.502
     },
     "distance": 1290,
     "recordingFile": "1km.wav",
@@ -79,7 +82,7 @@
     "position": {
       "x": -24.993,
       "y": 7.391,
-      "z": 14.858
+      "z": -14.858
     },
     "distance": 500,
     "recordingFile": "500m.wav",
@@ -93,7 +96,7 @@
     "position": {
       "x": -24.757,
       "y": 3.724,
-      "z": 16.53
+      "z": -16.53
     },
     "distance": 2220,
     "recordingFile": "2km.wav",
@@ -107,7 +110,7 @@
     "position": {
       "x": -28.798,
       "y": 3.65,
-      "z": 7.573
+      "z": -7.573
     },
     "distance": 2230,
     "recordingFile": "2km.wav",
@@ -128,7 +131,7 @@
 
   var DEBUG_COLORS = {'500m.wav':'#2ecc71','1km.wav':'#f1c40f','2km.wav':'#e74c3c','250m.wav':'#3498db'};
 
-  function loadAudio(){
+  function loadAudio(debugMode){
     AUDIO_CONFIG.forEach(function(src,i){
       var el=document.createElement('a-entity');
       el.setAttribute('position',{x:src.position.x,y:src.position.y,z:src.position.z});
@@ -143,29 +146,31 @@
       el.id='audio-'+i;
       audioContainer.appendChild(el);
 
-      // DEBUG: visible marker sphere
-      var marker=document.createElement('a-sphere');
-      marker.setAttribute('position',{x:src.position.x,y:src.position.y,z:src.position.z});
-      marker.setAttribute('radius','1.5');
-      marker.setAttribute('color',DEBUG_COLORS[src.recordingFile]||'#ffffff');
-      marker.setAttribute('material','opacity:0.7;transparent:true');
-      marker.setAttribute('look-at','[camera]');
-      var label=document.createElement('a-text');
-      label.setAttribute('value',src.name+'\\n'+src.distance+'m');
-      label.setAttribute('align','center');
-      label.setAttribute('position','0 2.5 0');
-      label.setAttribute('scale','4 4 4');
-      label.setAttribute('color','#cedc00');
-      label.setAttribute('look-at','[camera]');
-      marker.appendChild(label);
-      audioContainer.appendChild(marker);
+      // DEBUG: visible marker sphere (only in debug mode)
+      if(debugMode){
+        var marker=document.createElement('a-sphere');
+        marker.setAttribute('position',{x:src.position.x,y:src.position.y,z:src.position.z});
+        marker.setAttribute('radius','1.5');
+        marker.setAttribute('color',DEBUG_COLORS[src.recordingFile]||'#ffffff');
+        marker.setAttribute('material','opacity:0.7;transparent:true');
+        marker.setAttribute('look-at','[camera]');
+        var label=document.createElement('a-text');
+        label.setAttribute('value',src.name+'\\n'+src.distance+'m');
+        label.setAttribute('align','center');
+        label.setAttribute('position','0 2.5 0');
+        label.setAttribute('scale','4 4 4');
+        label.setAttribute('color','#cedc00');
+        label.setAttribute('look-at','[camera]');
+        marker.appendChild(label);
+        audioContainer.appendChild(marker);
+      }
     });
   }
 
-  document.getElementById('enter-vr-btn').addEventListener('click',async function(){
+  async function enterVR(debugMode){
     loading.classList.add('visible');
     if(!scene.hasLoaded) await new Promise(function(r){scene.addEventListener('loaded',r,{once:true})});
-    loadAudio();
+    loadAudio(debugMode);
     try{await scene.enterVR()}catch(e){console.warn('VR fallback:',e)}
     await wait(300);
     try{await video.play()}catch(e){console.warn('Video:',e)}
@@ -173,7 +178,10 @@
     sky.object3D.visible=true;
     landing.classList.add('hidden');
     loading.classList.remove('visible');
-  });
+  }
+
+  document.getElementById('enter-vr-btn').addEventListener('click',function(){enterVR(false)});
+  document.getElementById('enter-vr-debug-btn').addEventListener('click',function(){enterVR(true)});
 
   scene.addEventListener('exit-vr',function(){
     sky.object3D.visible=false;
