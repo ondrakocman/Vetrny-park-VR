@@ -126,6 +126,8 @@
 
   function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
+  var DEBUG_COLORS = {'500m.wav':'#2ecc71','1km.wav':'#f1c40f','2km.wav':'#e74c3c','250m.wav':'#3498db'};
+
   function loadAudio(){
     AUDIO_CONFIG.forEach(function(src,i){
       var el=document.createElement('a-entity');
@@ -140,6 +142,23 @@
       });
       el.id='audio-'+i;
       audioContainer.appendChild(el);
+
+      // DEBUG: visible marker sphere
+      var marker=document.createElement('a-sphere');
+      marker.setAttribute('position',{x:src.position.x,y:src.position.y,z:src.position.z});
+      marker.setAttribute('radius','1.5');
+      marker.setAttribute('color',DEBUG_COLORS[src.recordingFile]||'#ffffff');
+      marker.setAttribute('material','opacity:0.7;transparent:true');
+      marker.setAttribute('look-at','[camera]');
+      var label=document.createElement('a-text');
+      label.setAttribute('value',src.name+'\\n'+src.distance+'m');
+      label.setAttribute('align','center');
+      label.setAttribute('position','0 2.5 0');
+      label.setAttribute('scale','4 4 4');
+      label.setAttribute('color','#cedc00');
+      label.setAttribute('look-at','[camera]');
+      marker.appendChild(label);
+      audioContainer.appendChild(marker);
     });
   }
 
