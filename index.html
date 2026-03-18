@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Větrný park</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif}
+    #landing{position:fixed;inset:0;z-index:9999;background:#efeae2;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s}
+    #landing.hidden{opacity:0;pointer-events:none}
+    #landing .logo{width:min(60vw,420px);margin-bottom:48px}
+    #enter-vr-btn{padding:18px 52px;font-size:1.25rem;font-weight:700;color:#fff;border:none;border-radius:60px;background:linear-gradient(135deg,#249e6b,#cedc00);cursor:pointer;box-shadow:0 6px 24px rgba(36,158,107,.35);transition:transform .15s,box-shadow .15s;text-transform:uppercase;letter-spacing:.05em}
+    #enter-vr-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(36,158,107,.45)}
+    .hint{margin-top:24px;color:#888;font-size:.85rem}
+    #loading-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;color:#fff;font-size:1.4rem}
+    #loading-overlay.visible{display:flex}
+    .spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#cedc00;border-radius:50%;animation:spin .7s linear infinite;margin-right:14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .a-enter-vr{display:none!important}
+  </style>
+</head>
+<body>
+<div id="landing">
+  <img class="logo" src="assets/noho-logo.svg" alt="Logo" onerror="this.style.display='none'">
+  <button id="enter-vr-btn">Vstoupit do VR</button>
+  <p class="hint">Nasaďte Meta Quest 3 a klikněte na tlačítko</p>
+</div>
+<div id="loading-overlay"><div class="spinner"></div><span>Načítání…</span></div>
+
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+<a-scene vr-mode-ui="enabled:false" renderer="colorManagement:true;sortObjects:true;antialias:true" loading-screen="enabled:false" webxr="requiredFeatures:local-floor">
+  <a-assets timeout="90000">
+    <video id="vid" src="assets/video.mp4" crossorigin="anonymous" playsinline loop muted preload="auto"></video>
+  </a-assets>
+  <a-sky id="sky" visible="false" material="shader:flat;src:#vid;side:back"></a-sky>
+  <a-entity id="rig" position="0 1.6 0">
+    <a-camera look-controls="pointerLockEnabled:false" wasd-controls="enabled:true;acceleration:20"></a-camera>
+  </a-entity>
+  <a-entity id="audio-sources"></a-entity>
+</a-scene>
+
+<script>
+(function(){
+  'use strict';
+  var AUDIO_CONFIG = [
+  {
+    "name": "Turbine 1",
+    "audio": "assets/audio/500m.wav",
+    "position": {
+      "x": 29.404,
+      "y": 5.935,
+      "z": -0.445
+    },
+    "distance": 680,
+    "recordingFile": "500m.wav",
+    "recordingDistance": 500,
+    "volume": 0.735,
+    "loop": true
+  },
+  {
+    "name": "Turbine 2",
+    "audio": "assets/audio/1km.wav",
+    "position": {
+      "x": 25.502,
+      "y": 5.054,
+      "z": 14.971
+    },
+    "distance": 1290,
+    "recordingFile": "1km.wav",
+    "recordingDistance": 1000,
+    "volume": 0.775,
+    "loop": true
+  },
+  {
+    "name": "Turbine 3",
+    "audio": "assets/audio/500m.wav",
+    "position": {
+      "x": 14.858,
+      "y": 7.391,
+      "z": 24.993
+    },
+    "distance": 500,
+    "recordingFile": "500m.wav",
+    "recordingDistance": 500,
+    "volume": 1,
+    "loop": true
+  },
+  {
+    "name": "Turbine 4",
+    "audio": "assets/audio/2km.wav",
+    "position": {
+      "x": 16.53,
+      "y": 3.724,
+      "z": 24.757
+    },
+    "distance": 2220,
+    "recordingFile": "2km.wav",
+    "recordingDistance": 2000,
+    "volume": 0.901,
+    "loop": true
+  },
+  {
+    "name": "Turbine 5",
+    "audio": "assets/audio/2km.wav",
+    "position": {
+      "x": 7.573,
+      "y": 3.65,
+      "z": 28.798
+    },
+    "distance": 2230,
+    "recordingFile": "2km.wav",
+    "recordingDistance": 2000,
+    "volume": 0.897,
+    "loop": true
+  }
+];
+
+  var landing=document.getElementById('landing');
+  var loading=document.getElementById('loading-overlay');
+  var scene=document.querySelector('a-scene');
+  var sky=document.getElementById('sky');
+  var video=document.getElementById('vid');
+  var audioContainer=document.getElementById('audio-sources');
+
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+
+  function loadAudio(){
+    AUDIO_CONFIG.forEach(function(src,i){
+      var el=document.createElement('a-entity');
+      el.setAttribute('position',{x:src.position.x,y:src.position.y,z:src.position.z});
+      el.setAttribute('sound',{
+        src:src.audio,
+        autoplay:true,loop:src.loop,
+        volume:src.volume,
+        positional:true,poolSize:1,
+        distanceModel:'inverse',
+        refDistance:30,maxDistance:300,rolloffFactor:1
+      });
+      el.id='audio-'+i;
+      audioContainer.appendChild(el);
+    });
+  }
+
+  document.getElementById('enter-vr-btn').addEventListener('click',async function(){
+    loading.classList.add('visible');
+    if(!scene.hasLoaded) await new Promise(function(r){scene.addEventListener('loaded',r,{once:true})});
+    loadAudio();
+    try{await scene.enterVR()}catch(e){console.warn('VR fallback:',e)}
+    await wait(300);
+    try{await video.play()}catch(e){console.warn('Video:',e)}
+    await wait(200);
+    sky.object3D.visible=true;
+    landing.classList.add('hidden');
+    loading.classList.remove('visible');
+  });
+
+  scene.addEventListener('exit-vr',function(){
+    sky.object3D.visible=false;
+    try{video.pause();video.currentTime=0}catch(e){}
+    landing.classList.remove('hidden');
+  });
+})();
+</script>
+</body>
+</html>
