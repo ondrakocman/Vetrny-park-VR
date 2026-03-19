@@ -42,6 +42,7 @@
     <button class="debug-btn" data-transform="revz" style="width:60px;font-size:0.75rem;padding:4px">Rev Z</button>
     <button class="debug-btn" data-transform="rot90" style="width:60px;font-size:0.75rem;padding:4px">+90°</button>
     <button class="debug-btn" data-transform="rot-90" style="width:60px;font-size:0.75rem;padding:4px">-90°</button>
+    <button class="debug-btn" data-transform="rot270" style="width:60px;font-size:0.75rem;padding:4px">+270°</button>
     <button class="debug-btn" data-transform="reset" style="width:60px;font-size:0.75rem;padding:4px;background:#e74c3c">Reset</button>
   </div>
 </div>
@@ -147,7 +148,7 @@
 
   var DEBUG_COLORS = {'500m.wav':'#2ecc71','1km.wav':'#f1c40f','2km.wav':'#e74c3c','250m.wav':'#3498db'};
 
-  var currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false};
+  var currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false, rot270:false};
 
   function transformPosition(pos){
     var x = pos.x, y = pos.y, z = pos.z;
@@ -166,6 +167,12 @@
     }
     if(currentTransform.rot_90){
       // -90° Y rotation: x' = z, z' = -x
+      var newX = z;
+      var newZ = -x;
+      x = newX; z = newZ;
+    }
+    if(currentTransform.rot270){
+      // +270° Y rotation: x' = z, z' = -x (same as -90° but different implementation)
       var newX = z;
       var newZ = -x;
       x = newX; z = newZ;
@@ -237,7 +244,7 @@
       var transform = this.dataset.transform;
       
       if(transform === 'reset'){
-        currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false};
+        currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false, rot270:false};
         document.querySelectorAll('.debug-btn').forEach(function(b){b.classList.remove('active')});
       } else {
         currentTransform[transform] = !currentTransform[transform];
