@@ -188,8 +188,9 @@ var spheresVisible = false;
         sphere.setAttribute('color',src.recordingFile.includes('500m')?'#2ecc71':src.recordingFile.includes('1km')?'#f1c40f':src.recordingFile.includes('2km')?'#e74c3c':'#3498db');
         sphere.setAttribute('material','opacity:0.7;transparent:true');
         sphere.setAttribute('position','0 0 0');
+        sphere.setAttribute('look-at','[camera]');
+        sphere.setAttribute('visible',false);
         sphere.id='sphere-'+i;
-        sphere.style.display='none';
         el.appendChild(sphere);
       }
     });
@@ -213,9 +214,9 @@ var spheresVisible = false;
       var sound = state.element.components.sound;
       if(sound){
         if(state.muted){
-          sound.pauseSound();
+          state.element.setAttribute('sound', 'volume', 0);
         } else {
-          sound.playSound();
+          state.element.setAttribute('sound', 'volume', AUDIO_CONFIG[index].volume);
         }
       }
     }
