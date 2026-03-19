@@ -34,12 +34,15 @@
 <div id="loading-overlay"><div class="spinner"></div><span>Načítání…</span></div>
 
 <!-- Interactive Turbine Control Overlay -->
-<div id="turbine-menu" style="position:fixed;top:20px;right:20px;z-index:10000;display:none;padding:16px;background:linear-gradient(135deg,rgba(52,152,219,0.95),rgba(155,89,182,0.95));border-radius:12px;color:white;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.3);backdrop-filter:blur(10px)">
-  <h3 style="margin:0 0 12px 0;font-size:1.1rem;text-align:center">Ovládání turbín</h3>
+<div id="turbine-menu" style="position:fixed;top:20px;right:20px;z-index:10000;display:none;padding:16px;background:#efeae2;border-radius:12px;color:#333;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.3);border:2px solid #249e6b">
+  <h3 style="margin:0 0 12px 0;font-size:1.1rem;text-align:center;color:#249e6b">Ovládání turbín</h3>
   <div id="turbine-list" style="display:flex;flex-direction:column;gap:8px">
     <!-- Turbine controls will be added here dynamically -->
   </div>
-  <button id="close-menu" style="margin-top:12px;width:100%;padding:8px;background:rgba(255,255,255,0.2);border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.9rem">Zavřít</button>
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button id="toggle-spheres" style="flex:1;padding:8px;background:#249e6b;border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.9rem">Zobrazit sféry</button>
+    <button id="close-menu" style="flex:1;padding:8px;background:#cedc00;border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.9rem">Zavřít</button>
+  </div>
 </div>
 
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -142,6 +145,7 @@
 
   var interactiveMode = false;
 var turbineStates = {};
+var spheresVisible = false;
 
   function initTurbineStates(){
     AUDIO_CONFIG.forEach(function(src,i){
@@ -170,12 +174,23 @@ var turbineStates = {};
         var label=document.createElement('a-text');
         label.setAttribute('value',src.name+'\\n'+src.distance+'m\\n🔊');
         label.setAttribute('align','center');
-        label.setAttribute('position','0 3 0');
-        label.setAttribute('scale','3 3 3');
+        label.setAttribute('position','0 4 0');
+        label.setAttribute('scale','4 4 4');
         label.setAttribute('color','#ffffff');
         label.setAttribute('billboard','');
+        label.setAttribute('look-at','[camera]');
         label.id='label-'+i;
         el.appendChild(label);
+        
+        // Optional sphere for debugging
+        var sphere=document.createElement('a-sphere');
+        sphere.setAttribute('radius','1.5');
+        sphere.setAttribute('color',src.recordingFile.includes('500m')?'#2ecc71':src.recordingFile.includes('1km')?'#f1c40f':src.recordingFile.includes('2km')?'#e74c3c':'#3498db');
+        sphere.setAttribute('material','opacity:0.7;transparent:true');
+        sphere.setAttribute('position','0 0 0');
+        sphere.id='sphere-'+i;
+        sphere.style.display='none';
+        el.appendChild(sphere);
       }
     });
   }
@@ -216,14 +231,14 @@ var turbineStates = {};
     AUDIO_CONFIG.forEach(function(src,i){
       var state = turbineStates[i];
       var item = document.createElement('div');
-      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(255,255,255,0.1);border-radius:6px';
+      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(36,158,107,0.1);border-radius:6px;border:1px solid rgba(36,158,107,0.3)';
       
       var info = document.createElement('div');
-      info.innerHTML = '<div style="font-weight:600">'+src.name+'</div><div style="font-size:0.8rem;opacity:0.8">'+src.distance+'m</div>';
+      info.innerHTML = '<div style="font-weight:600;color:#249e6b">'+src.name+'</div><div style="font-size:0.8rem;color:#666">'+src.distance+'m</div>';
       
       var muteBtn = document.createElement('button');
       muteBtn.innerHTML = state.muted ? '🔇' : '🔊';
-      muteBtn.style.cssText = 'padding:6px 12px;background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:white;cursor:pointer;font-size:1rem';
+      muteBtn.style.cssText = 'padding:6px 12px;background:#249e6b;border:none;border-radius:4px;color:white;cursor:pointer;font-size:1rem';
       muteBtn.onclick = function(){toggleTurbine(i)};
       
       item.appendChild(info);
@@ -240,6 +255,20 @@ var turbineStates = {};
         muteBtn.innerHTML = state.muted ? '🔇' : '🔊';
       }
     });
+  }
+
+  function toggleSpheres(){
+    spheresVisible = !spheresVisible;
+    var toggleBtn = document.getElementById('toggle-spheres');
+    
+    AUDIO_CONFIG.forEach(function(src,i){
+      var sphere = document.getElementById('sphere-'+i);
+      if(sphere){
+        sphere.setAttribute('visible', spheresVisible);
+      }
+    });
+    
+    toggleBtn.innerHTML = spheresVisible ? 'Skrýt sféry' : 'Zobrazit sféry';
   }
 
   async function enterVR(mode){
@@ -269,6 +298,7 @@ var turbineStates = {};
   document.getElementById('close-menu').addEventListener('click',function(){
     document.getElementById('turbine-menu').style.display='none';
   });
+  document.getElementById('toggle-spheres').addEventListener('click',toggleSpheres);
 
   scene.addEventListener('exit-vr',function(){
     sky.object3D.visible=false;
