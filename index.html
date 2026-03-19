@@ -169,29 +169,28 @@ var spheresVisible = false;
       audioContainer.appendChild(el);
       turbineStates[i].element = el;
 
-      // Interactive mode: add floating label
+      // Interactive mode: add floating label and sphere as separate entities
       if(interactiveMode){
+        // Create floating label as separate entity
         var label=document.createElement('a-text');
         label.setAttribute('value',src.name+'\\n'+src.distance+'m\\n🔊');
         label.setAttribute('align','center');
-        label.setAttribute('position','0 4 0');
+        label.setAttribute('position',src.position.x+' '+(src.position.y+4)+' '+src.position.z);
         label.setAttribute('scale','4 4 4');
         label.setAttribute('color','#ffffff');
         label.setAttribute('billboard','');
-        label.setAttribute('look-at','[camera]');
         label.id='label-'+i;
-        el.appendChild(label);
+        scene.appendChild(label);
         
-        // Optional sphere for debugging
+        // Create sphere as separate entity
         var sphere=document.createElement('a-sphere');
         sphere.setAttribute('radius','1.5');
         sphere.setAttribute('color',src.recordingFile.includes('500m')?'#2ecc71':src.recordingFile.includes('1km')?'#f1c40f':src.recordingFile.includes('2km')?'#e74c3c':'#3498db');
         sphere.setAttribute('material','opacity:0.7;transparent:true');
-        sphere.setAttribute('position','0 0 0');
-        sphere.setAttribute('look-at','[camera]');
+        sphere.setAttribute('position',src.position.x+' '+src.position.y+' '+src.position.z);
         sphere.setAttribute('visible',false);
         sphere.id='sphere-'+i;
-        el.appendChild(sphere);
+        scene.appendChild(sphere);
       }
     });
   }
