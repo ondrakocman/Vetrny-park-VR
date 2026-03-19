@@ -18,33 +18,13 @@
     .spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#cedc00;border-radius:50%;animation:spin .7s linear infinite;margin-right:14px}
     @keyframes spin{to{transform:rotate(360deg)}}
     .a-enter-vr{display:none!important}
-    .debug-btn{padding:8px 16px;font-size:0.85rem;border:none;border-radius:4px;background:#34495e;color:#fff;cursor:pointer;transition:background 0.2s}
-    .debug-btn:hover{background:#2c3e50}
-    .debug-btn.active{background:#3498db}
   </style>
 </head>
 <body>
 <div id="landing">
   <img class="logo" src="assets/noho-logo.svg" alt="Logo" onerror="this.style.display='none'">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
-    <button id="enter-vr-btn" style="padding:18px 42px">Vstoupit do VR</button>
-    <button id="enter-vr-debug-btn" style="padding:18px 42px;background:linear-gradient(135deg,#e67e22,#f39c12)">Vstoupit do VR (Debug)</button>
-  </div>
+  <button id="enter-vr-btn">Vstoupit do VR</button>
   <p class="hint">Nasaďte Meta Quest 3 a klikněte na tlačítko</p>
-</div>
-
-<!-- Debug Transform Controls - DOM Overlay for VR -->
-<div id="debug-overlay" style="position:fixed;top:20px;right:20px;z-index:10000;display:none;padding:12px;background:rgba(0,0,0,0.8);border-radius:8px;color:white">
-  <p style="margin:0 0 8px 0;font-size:0.8rem">Transform Debug:</p>
-  <div style="display:flex;flex-direction:column;gap:4px">
-    <button class="debug-btn" data-transform="revx" style="width:60px;font-size:0.75rem;padding:4px">Rev X</button>
-    <button class="debug-btn" data-transform="revy" style="width:60px;font-size:0.75rem;padding:4px">Rev Y</button>
-    <button class="debug-btn" data-transform="revz" style="width:60px;font-size:0.75rem;padding:4px">Rev Z</button>
-    <button class="debug-btn" data-transform="rot90" style="width:60px;font-size:0.75rem;padding:4px">+90°</button>
-    <button class="debug-btn" data-transform="rot-90" style="width:60px;font-size:0.75rem;padding:4px">-90°</button>
-    <button class="debug-btn" data-transform="rot270" style="width:60px;font-size:0.75rem;padding:4px">+270°</button>
-    <button class="debug-btn" data-transform="reset" style="width:60px;font-size:0.75rem;padding:4px;background:#e74c3c">Reset</button>
-  </div>
 </div>
 <div id="loading-overlay"><div class="spinner"></div><span>Načítání…</span></div>
 
@@ -69,9 +49,9 @@
     "name": "Turbine 1",
     "audio": "assets/audio/500m.wav",
     "position": {
-      "x": 29.404,
+      "x": -0.445,
       "y": 5.935,
-      "z": -0.445
+      "z": -29.404
     },
     "distance": 680,
     "recordingFile": "500m.wav",
@@ -83,9 +63,9 @@
     "name": "Turbine 2",
     "audio": "assets/audio/1km.wav",
     "position": {
-      "x": 25.502,
+      "x": 14.971,
       "y": 5.054,
-      "z": 14.971
+      "z": -25.502
     },
     "distance": 1290,
     "recordingFile": "1km.wav",
@@ -97,9 +77,9 @@
     "name": "Turbine 3",
     "audio": "assets/audio/500m.wav",
     "position": {
-      "x": 14.858,
+      "x": 24.993,
       "y": 7.391,
-      "z": 24.993
+      "z": -14.858
     },
     "distance": 500,
     "recordingFile": "500m.wav",
@@ -111,9 +91,9 @@
     "name": "Turbine 4",
     "audio": "assets/audio/2km.wav",
     "position": {
-      "x": 16.53,
+      "x": 24.757,
       "y": 3.724,
-      "z": 24.757
+      "z": -16.53
     },
     "distance": 2220,
     "recordingFile": "2km.wav",
@@ -125,9 +105,9 @@
     "name": "Turbine 5",
     "audio": "assets/audio/2km.wav",
     "position": {
-      "x": 7.573,
+      "x": 28.798,
       "y": 3.65,
-      "z": 28.798
+      "z": -7.573
     },
     "distance": 2230,
     "recordingFile": "2km.wav",
@@ -146,47 +126,10 @@
 
   function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
-  var DEBUG_COLORS = {'500m.wav':'#2ecc71','1km.wav':'#f1c40f','2km.wav':'#e74c3c','250m.wav':'#3498db'};
-
-  var currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false, rot270:false};
-
-  function transformPosition(pos){
-    var x = pos.x, y = pos.y, z = pos.z;
-    
-    // Apply reversals
-    if(currentTransform.revx) x = -x;
-    if(currentTransform.revy) y = -y;
-    if(currentTransform.revz) z = -z;
-    
-    // Apply rotations
-    if(currentTransform.rot90){
-      // +90° Y rotation: x' = -z, z' = x
-      var newX = -z;
-      var newZ = x;
-      x = newX; z = newZ;
-    }
-    if(currentTransform.rot_90){
-      // -90° Y rotation: x' = z, z' = -x
-      var newX = z;
-      var newZ = -x;
-      x = newX; z = newZ;
-    }
-    if(currentTransform.rot270){
-      // +270° Y rotation: x' = z, z' = -x (same as -90° but different implementation)
-      var newX = z;
-      var newZ = -x;
-      x = newX; z = newZ;
-    }
-    
-    return {x:x, y:y, z:z};
-  }
-
-  function loadAudio(debugMode){
+  function loadAudio(){
     AUDIO_CONFIG.forEach(function(src,i){
-      var pos = transformPosition(src.position);
-      
       var el=document.createElement('a-entity');
-      el.setAttribute('position',pos);
+      el.setAttribute('position',src.position);
       el.setAttribute('sound',{
         src:src.audio,
         autoplay:true,loop:src.loop,
@@ -197,32 +140,13 @@
       });
       el.id='audio-'+i;
       audioContainer.appendChild(el);
-
-      // DEBUG: visible marker sphere (only in debug mode)
-      if(debugMode){
-        var marker=document.createElement('a-sphere');
-        marker.setAttribute('position',pos);
-        marker.setAttribute('radius','1.5');
-        marker.setAttribute('color',DEBUG_COLORS[src.recordingFile]||'#ffffff');
-        marker.setAttribute('material','opacity:0.7;transparent:true');
-        marker.setAttribute('look-at','[camera]');
-        var label=document.createElement('a-text');
-        label.setAttribute('value',src.name+'\\n'+src.distance+'m');
-        label.setAttribute('align','center');
-        label.setAttribute('position','0 2.5 0');
-        label.setAttribute('scale','4 4 4');
-        label.setAttribute('color','#cedc00');
-        label.setAttribute('look-at','[camera]');
-        marker.appendChild(label);
-        audioContainer.appendChild(marker);
-      }
     });
   }
 
-  async function enterVR(debugMode){
+  async function enterVR(){
     loading.classList.add('visible');
     if(!scene.hasLoaded) await new Promise(function(r){scene.addEventListener('loaded',r,{once:true})});
-    loadAudio(debugMode);
+    loadAudio();
     try{await scene.enterVR()}catch(e){console.warn('VR fallback:',e)}
     await wait(300);
     try{await video.play()}catch(e){console.warn('Video:',e)}
@@ -232,36 +156,12 @@
     loading.classList.remove('visible');
   }
 
-  document.getElementById('enter-vr-btn').addEventListener('click',function(){enterVR(false)});
-  document.getElementById('enter-vr-debug-btn').addEventListener('click',function(){
-    document.getElementById('debug-overlay').style.display='block';
-    enterVR(true);
-  });
-
-  // Debug transform controls
-  document.querySelectorAll('.debug-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var transform = this.dataset.transform;
-      
-      if(transform === 'reset'){
-        currentTransform = {revx:false, revy:false, revz:false, rot90:false, rot_90:false, rot270:false};
-        document.querySelectorAll('.debug-btn').forEach(function(b){b.classList.remove('active')});
-      } else {
-        currentTransform[transform] = !currentTransform[transform];
-        this.classList.toggle('active');
-      }
-      
-      // Reload audio with new transforms
-      while(audioContainer.firstChild) audioContainer.removeChild(audioContainer.firstChild);
-      loadAudio(true);
-    });
-  });
+  document.getElementById('enter-vr-btn').addEventListener('click',enterVR);
 
   scene.addEventListener('exit-vr',function(){
     sky.object3D.visible=false;
     try{video.pause();video.currentTime=0}catch(e){}
     landing.classList.remove('hidden');
-    document.getElementById('debug-overlay').style.display='none';
   });
 })();
 </script>
